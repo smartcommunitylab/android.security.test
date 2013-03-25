@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2012-2013 Trento RISE
+ * 
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ ******************************************************************************/
 package eu.trentorise.smartcampus.android.security.test;
 
 import android.accounts.AccountManager;
@@ -12,6 +27,7 @@ import android.widget.Toast;
 import eu.trentorise.smartcampus.ac.Constants;
 import eu.trentorise.smartcampus.ac.SCAccessProvider;
 import eu.trentorise.smartcampus.ac.authenticator.AMSCAccessProvider;
+import eu.trentorise.smartcampus.ac.model.UserData;
 
 public class ACActivity extends Activity {
     /** Called when the activity is first created. */
@@ -28,8 +44,9 @@ public class ACActivity extends Activity {
         setContentView(R.layout.main);
 
         final SCAccessProvider provider = new AMSCAccessProvider();
-        String token = provider.readToken(this, Constants.TOKEN_TYPE_ANONYMOUS);
-        if (token == null) {
+        final String token = provider.readToken(this, null);
+        UserData data = provider.readUserData(this, null);
+        if (token == null && provider.readToken(this, Constants.TOKEN_TYPE_ANONYMOUS)==null) {
         	AlertDialog.Builder builder = new AlertDialog.Builder(this);
         	builder.setMessage("Do you want to register?");
         	builder.setPositiveButton(android.R.string.yes, new OnClickListener() {
@@ -54,7 +71,25 @@ public class ACActivity extends Activity {
 			});
         	builder.create().show();
         } else {
-        	Toast.makeText(this, "Registered with token "+token, Toast.LENGTH_LONG).show();
+        	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        	builder.setMessage("Do you want to promote?");
+        	builder.setPositiveButton(android.R.string.yes, new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					try {
+						provider.promote(ACActivity.this, null, token);
+					} catch (Exception e) {
+			        	Toast.makeText(ACActivity.this, "Failure: "+e.getMessage(), Toast.LENGTH_LONG).show();
+					}
+				}
+			});
+        	builder.setNegativeButton(android.R.string.no, new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+        	builder.create().show();
         }
     }
     
